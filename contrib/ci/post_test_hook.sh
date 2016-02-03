@@ -139,7 +139,7 @@ elif [[ "$DRIVER" == "generic" ]]; then
     fi
 fi
 
-if [[ "$DRIVER" == "lvm"  ]]; then
+if [[ "$DRIVER" == "lvm" ]]; then
     MANILA_TEMPEST_CONCURRENCY=8
     RUN_MANILA_CG_TESTS=False
     RUN_MANILA_MANAGE_TESTS=False
@@ -157,6 +157,20 @@ if [[ "$DRIVER" == "lvm"  ]]; then
         samba_daemon_name=smb
     fi
     sudo service $samba_daemon_name restart
+elif [[ "$DRIVER" == "zfsonlinux" ]]; then
+    MANILA_TEMPEST_CONCURRENCY=8
+    RUN_MANILA_CG_TESTS=False
+    RUN_MANILA_MANAGE_TESTS=False
+    iniset $TEMPEST_CONFIG share run_shrink_tests True
+    iniset $TEMPEST_CONFIG share run_migration_tests False
+    iniset $TEMPEST_CONFIG share enable_ip_rules_for_protocols 'nfs'
+    iniset $TEMPEST_CONFIG share enable_user_rules_for_protocols ''
+    iniset $TEMPEST_CONFIG share enable_cert_rules_for_protocols ''
+    iniset $TEMPEST_CONFIG share enable_ro_access_level_for_protocols 'nfs'
+    iniset $TEMPEST_CONFIG share build_timeout 30
+    iniset $TEMPEST_CONFIG share share_creation_retry_number 0
+    iniset $TEMPEST_CONFIG share capability_storage_protocol 'NFS'
+    iniset $TEMPEST_CONFIG share enable_protocols 'nfs'
 fi
 
 # Enable consistency group tests
