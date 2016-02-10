@@ -559,28 +559,30 @@ elif [[ "$1" == "stack" && "$2" == "extra" ]]; then
     echo_summary "Creating Manila entities for auth service"
     create_manila_accounts
 
-    echo_summary "Creating Manila service flavor"
-    create_manila_service_flavor
+    if is_service_enabled nova; then
+        echo_summary "Creating Manila service flavor"
+        create_manila_service_flavor
 
-    echo_summary "Creating Manila service security group"
-    create_manila_service_secgroup
+        echo_summary "Creating Manila service security group"
+        create_manila_service_secgroup
 
-    # Skip image downloads when disabled.
-    # This way vendor Manila driver CI tests can skip
-    # this potentially long and unnecessary download.
-    if [ "$MANILA_SERVICE_IMAGE_ENABLED" = "True" ]; then
-        echo_summary "Creating Manila service image"
-        create_manila_service_image
-    else
-        echo_summary "Skipping download of Manila service image"
+        # Skip image downloads when disabled.
+        # This way vendor Manila driver CI tests can skip
+        # this potentially long and unnecessary download.
+        if [ "$MANILA_SERVICE_IMAGE_ENABLED" = "True" ]; then
+            echo_summary "Creating Manila service image"
+            create_manila_service_image
+        else
+            echo_summary "Skipping download of Manila service image"
+        fi
+
+        echo_summary "Creating Manila service keypair"
+        create_manila_service_keypair
+
+        echo_summary "Creating Manila service VMs for generic driver \
+            backends for which handlng of share servers is disabled."
+        create_service_share_servers
     fi
-
-    echo_summary "Creating Manila service keypair"
-    create_manila_service_keypair
-
-    echo_summary "Creating Manila service VMs for generic driver \
-        backends for which handlng of share servers is disabled."
-    create_service_share_servers
 
     echo_summary "Configure Samba server"
     configure_samba
