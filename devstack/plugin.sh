@@ -453,6 +453,7 @@ function init_manila {
                     local second_file="$MANILA_ZFSONLINUX_BACKEND_FILES_CONTAINER_DIR"/betta
                     truncate -s $MANILA_ZFSONLINUX_ZPOOL_SIZE $first_file
                     truncate -s $MANILA_ZFSONLINUX_ZPOOL_SIZE $second_file
+                    sudo modprobe zfs
                     sudo zpool create alpha $first_file
                     sudo zpool create betta $second_file
                     # Create subdir (nested dataset) for second pool
