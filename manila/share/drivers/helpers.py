@@ -345,6 +345,52 @@ class NFSHelper(NASHelperBase):
         ]
         self._ssh_exec(server, restore_exports)
 
+class NFSLocalHelper(NASHelperBase):
+    """Interface to work with share."""
+
+    def create_exports(self, server, share_name, recreate=False):
+        path = os.path.join(self.configuration.share_mount_path, share_name)
+        return self.get_exports_for_share(server, path)
+
+    def init_helper(self, server):
+        try:
+            self._execute(['exportfs'], run_as_root=True)
+        except exception.ProcessExecutionError as e:
+            if 'command not found' in e.stderr:
+                raise exception.ManilaException(
+                    _('NFS server is not installed on %s')
+                    % server['instance_id'])
+            LOG.error(e.stderr)
+
+    def remove_exports(self, server, share_name):
+        """Remove exports."""
+
+    def update_access(self, server, share_name, access_rules, add_rules,
+                      delete_rules):
+        """Update access rules for given share.
+
+        Please refer to base class for a more in-depth description.
+        """
+        local_path = os.path.join(self.configuration.share_mount_path,
+                                  share_name)
+
+        self.validate_access_rules(access_rules, ('ip',),
+                                   (const.ACCESS_LEVEL_RO,
+                                    const.ACCESS_LEVEL_RW))
+
+        exports_filename = '/etc/exports.d/%s.exports' % share_name
+        with open(exports_filename, 'w') as exports_file:
+            for access in access_rules:
+                options = ['no_subtree_check', 'no_root_squash',
+                           access['access_level']]
+                access_to = access['access_to']
+                if 0 == access_to.split('/')[1]:
+                    access_to = '*'
+                exports_file.write('%s %s(%s)\n' % (local_path, access_to,
+                                                    ','.join(options)))
+
+        self._execute(['exportfs', '-r'], run_as_root=True)
+
 
 class CIFSHelperBase(NASHelperBase):
     @staticmethod

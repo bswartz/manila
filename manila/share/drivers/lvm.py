@@ -51,7 +51,7 @@ share_opts = [
     cfg.ListOpt('lvm_share_helpers',
                 default=[
                     'CIFS=manila.share.drivers.helpers.CIFSHelperUserAccess',
-                    'NFS=manila.share.drivers.helpers.NFSHelper',
+                    'NFS=manila.share.drivers.helpers.NFSLocalHelper',
                 ],
                 help='Specify list of share export helpers.'),
 ]
