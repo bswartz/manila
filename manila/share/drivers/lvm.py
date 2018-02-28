@@ -29,6 +29,7 @@ from oslo_utils import importutils
 from oslo_utils import timeutils
 import six
 
+from manila.common import constants
 from manila import exception
 from manila.i18n import _
 from manila.share import driver
@@ -55,6 +56,8 @@ share_opts = [
                default='lvm-shares',
                help='Name for the VG that will contain exported shares.'),
     cfg.ListOpt('lvm_share_helpers',
+                deprecated_for_removal=True,
+                deprecated_reason='Die!',
                 default=[
                     'CIFS=manila.share.drivers.helpers.CIFSHelperUserAccess',
                     'NFS=manila.share.drivers.helpers.NFSHelper',
@@ -284,7 +287,9 @@ class LVMShareDriver(LVMMixin, driver.ShareDriver):
         updates = {}
         for share in shares:
             updates[share['id']] = {
-                'export_locations': self.ensure_share(context, share)}
+                'export_locations': self.ensure_share(context, share),
+                'access_rules': True,
+            }
         return updates
 
     def ensure_share(self, ctx, share, share_server=None):
@@ -525,4 +530,6 @@ class LVMShareDriver(LVMMixin, driver.ShareDriver):
         return {
             'export_ips': ','.join(self.share_server['public_addresses']),
             'db_version': utils.get_recent_db_migration_id(),
+            'helpers': ','.join(self.configuration.lvm_share_helpers),
+            'foo': 'bar10',
         }

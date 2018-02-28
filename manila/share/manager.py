@@ -322,7 +322,7 @@ class ShareManager(manager.SchedulerDependentManager):
                   "host": self.host})
 
     def ensure_driver_resources(self, ctxt):
-        old_backend_info_hash = self.db.backend_info_get(ctxt, self.host)
+        old_backend_info = self.db.backend_info_get(ctxt, self.host)
         new_backend_info = None
         new_backend_info_hash = None
         update_share_instances = []
@@ -344,8 +344,8 @@ class ShareManager(manager.SchedulerDependentManager):
             new_backend_info_hash = hashlib.sha1(six.text_type(
                 sorted(new_backend_info.items())).encode('utf-8')).hexdigest()
 
-        if (old_backend_info_hash and
-                old_backend_info_hash == new_backend_info_hash):
+        if (old_backend_info and
+                old_backend_info.info_hash == new_backend_info_hash):
             LOG.debug(
                 ("The ensure share be skipped because the The old backend "
                  "%(host)s info as the same as new backend info"),
@@ -417,12 +417,18 @@ class ShareManager(manager.SchedulerDependentManager):
 
             share_server = self._get_share_server(ctxt, share_instance)
 
+            update_access_rules = (
+                update_share_instances[share_instance['id']]
+                .get('access_rules')
+            )
+
             if share_instance['access_rules_status'] != (
-                    constants.STATUS_ACTIVE):
+                    constants.STATUS_ACTIVE) or update_access_rules:
                 try:
                     # Cast any existing 'applying' rules to 'new'
                     self.access_helper.reset_applying_rules(
-                        ctxt, share_instance['id'])
+                        ctxt, share_instance['id'],
+                        requeue_active=update_access_rules)
                     self.access_helper.update_access_rules(
                         ctxt, share_instance['id'], share_server=share_server)
                 except Exception:

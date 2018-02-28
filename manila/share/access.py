@@ -566,13 +566,17 @@ class ShareInstanceAccess(ShareInstanceAccessDatabaseMixin):
         )
         return rules_to_apply_or_deny
 
-    def reset_applying_rules(self, context, share_instance_id):
+    def reset_applying_rules(self, context, share_instance_id,
+                             requeue_active=False):
         conditional_updates = {
             constants.ACCESS_STATE_APPLYING:
                 constants.ACCESS_STATE_QUEUED_TO_APPLY,
             constants.ACCESS_STATE_DENYING:
                 constants.ACCESS_STATE_QUEUED_TO_DENY,
         }
+        if requeue_active:
+            conditional_updates[constants.ACCESS_STATE_ACTIVE] = (
+                constants.ACCESS_STATE_QUEUED_TO_APPLY)
         self.get_and_update_share_instance_access_rules(
             context, share_instance_id=share_instance_id,
             conditionally_change=conditional_updates)
